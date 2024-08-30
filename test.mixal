@@ -1,0 +1,7 @@
+X          EQU     100
+TERM       EQU     18
+           ORIG    3000
+START      OUT     2
+              HLT
+              END     START
+              HLT
