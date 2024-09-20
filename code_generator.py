@@ -1,4 +1,4 @@
-# code_generator.py
+
 
 from ast_node import (
     AssignNode,
@@ -25,16 +25,11 @@ class CodeGenerator:
         self.temp_result = None
 
     def generate(self, ast):
-        # Start of program
-        self.code.append("         ORIG 2000")  # Start address for the program
 
-        # Generate code for the program
         for statement in ast:
             self.generate_statement(statement)
 
-        self.code.append("         END 2000\n")  # End of program
 
-        # Combine code into a single string
         full_code = "\n".join(self.code)
         return full_code
 
@@ -56,10 +51,8 @@ class CodeGenerator:
         var_name = node.var
         var_addr = self.find_memory_location(var_name)
 
-        # Generate code for the expression on the right-hand side
         self.generate_expression(node.value)
 
-        # Store the result into the variable's memory location
         self.code.append(f"         STA {var_addr}(0:5)")
 
     def generate_if(self, node):
@@ -67,7 +60,6 @@ class CodeGenerator:
         endif_label = self.new_label('ENDIF')
         else_label = self.new_label('ELSE') if node.else_branch else None
 
-        # Generate code for condition
         self.generate_condition(node.condition)
 
         if node.condition.operator == 'LESS_THAN':
@@ -82,14 +74,12 @@ class CodeGenerator:
         else:
             self.code.append(f"         JMP {endif_label}")
 
-        # Then branch
         self.code.append(f"{then_label:<8}NOP")
         for stmt in node.then_branch:
             self.generate_statement(stmt)
 
         if else_label:
             self.code.append(f"         JMP {endif_label}")
-            # Else branch
             self.code.append(f"{else_label:<8}NOP")
             for stmt in node.else_branch:
                 self.generate_statement(stmt)
@@ -102,11 +92,9 @@ class CodeGenerator:
 
         self.code.append(f"{repeat_label:<8}NOP")
 
-        # Loop body
         for stmt in node.body:
             self.generate_statement(stmt)
 
-        # Generate condition
         self.generate_condition(node.condition)
 
         if node.condition.operator == 'EQUALS':
@@ -162,9 +150,7 @@ class CodeGenerator:
             raise NotImplementedError(f"Unknown expression node type: {type(node)}")
 
     def generate_number(self, node):
-        # Load the number into the accumulator
         self.code.append(f"         ENTA {node.value}")
-        # Store the result in a temporary variable
         temp_var = self.allocate_temp()
         temp_addr = self.symbol_table[temp_var]
         self.code.append(f"         STA {temp_addr}(0:5)")
@@ -172,9 +158,7 @@ class CodeGenerator:
 
     def generate_id(self, node):
         var_addr = self.find_memory_location(node.name)
-        # Load the variable into the accumulator
         self.code.append(f"         LDA {var_addr}(0:5)")
-        # Store the result in a temporary variable
         temp_var = self.allocate_temp()
         temp_addr = self.symbol_table[temp_var]
         self.code.append(f"         STA {temp_addr}(0:5)")
@@ -198,114 +182,90 @@ class CodeGenerator:
             raise NotImplementedError(f"Unknown binary operator: {operator}")
 
     def generate_plus(self, node):
-        # Generate code for left operand
         self.generate_expression(node.left)
         left_addr = self.temp_result
-        # Store left result in TEMP variable
         temp_var_left = self.allocate_temp()
         temp_addr_left = self.symbol_table[temp_var_left]
         self.code.append(f"         STA {temp_addr_left}(0:5)")
-        # Generate code for right operand
         self.generate_expression(node.right)
-        # Add left result to accumulator
         self.code.append(f"         ADD {temp_addr_left}(0:5)")
-        # Store the result in a temp variable
         temp_var_result = self.allocate_temp()
         temp_addr_result = self.symbol_table[temp_var_result]
         self.code.append(f"         STA {temp_addr_result}(0:5)")
         self.temp_result = temp_addr_result
 
     def generate_minus(self, node):
-        # Generate code for left operand
         self.generate_expression(node.left)
         left_addr = self.temp_result
-        # Store left result in TEMP variable
         temp_var_left = self.allocate_temp()
         temp_addr_left = self.symbol_table[temp_var_left]
         self.code.append(f"         STA {temp_addr_left}(0:5)")
-        # Generate code for right operand
         self.generate_expression(node.right)
-        # Subtract left operand from accumulator
         self.code.append(f"         SUB {temp_addr_left}(0:5)")
-        # Store the result in OPPTEMP
         opptemp_addr = self.find_memory_location('OPPTEMP')
         self.code.append(f"         STA {opptemp_addr}(0:5)")
-        # ENTA 0
         self.code.append(f"         ENTA 0")
-        # Subtract OPPTEMP from 0 (effectively negating)
         self.code.append(f"         SUB {opptemp_addr}(0:5)")
-        # Store the result in a temp variable
         temp_var_result = self.allocate_temp()
         temp_addr_result = self.symbol_table[temp_var_result]
         self.code.append(f"         STA {temp_addr_result}(0:5)")
         self.temp_result = temp_addr_result
 
     def generate_mul(self, node):
-        # Allocate temp variable
         temp_var = self.allocate_temp()
         temp_addr = self.symbol_table[temp_var]
-        # STZ TEMP
         self.code.append(f"         STZ {temp_addr}(0:5)")
-        # Generate code for left operand
         self.generate_expression(node.left)
-        # Store A in TEMP
         self.code.append(f"         STA {temp_addr}(0:5)")
-        # Generate code for right operand
         self.generate_expression(node.right)
-        # Multiply A * TEMP
         self.code.append(f"         MUL {temp_addr}(0:5)")
-        # Store result back into accumulator (assuming result fits)
         self.code.append(f"         STX {temp_addr}(0:5)")
         self.code.append(f"         LDA {temp_addr}(0:5)")
         self.code.append(f"         ENTX 0")
-        # Store the result in a temp variable
         temp_var_result = self.allocate_temp()
         temp_addr_result = self.symbol_table[temp_var_result]
         self.code.append(f"         STA {temp_addr_result}(0:5)")
         self.temp_result = temp_addr_result
 
     def generate_div(self, node):
-        # Allocate temp variable
+        if "SWAPTEMP" not in self.symbol_table:
+            self.symbol_table["SWAPTEMP"] = self.next_memory_address
+            self.next_memory_address += 1
+        
+        swaptmp_addr = self.symbol_table["SWAPTEMP"]
+
         temp_var = self.allocate_temp()
         temp_addr = self.symbol_table[temp_var]
-        # Generate code for left operand
+
         self.generate_expression(node.left)
-        # Store A in TEMP
         self.code.append(f"         STA {temp_addr}(0:5)")
-        # Generate code for right operand
+
         self.generate_expression(node.right)
-        # Swap A and X registers
-        self.code.append(f"         STA SWAPTEMP(0:5)")
-        self.code.append(f"         LDX SWAPTEMP(0:5)")
+
+        self.code.append(f"         STA {swaptmp_addr}(0:5)")
+        self.code.append(f"         LDX {swaptmp_addr}(0:5)")
         self.code.append(f"         LDA {temp_addr}(0:5)")
         self.code.append(f"         STX {temp_addr}(0:5)")
-        self.code.append(f"         LDA SWAPTEMP(0:5)")
+        self.code.append(f"         LDA {swaptmp_addr}(0:5)")
         self.code.append(f"         LDX {temp_addr}(0:5)")
-        # Perform division
+
         self.code.append(f"         ENTA 0")
         self.code.append(f"         DIV {temp_addr}(0:5)")
-        # Store the result
+
         temp_var_result = self.allocate_temp()
         temp_addr_result = self.symbol_table[temp_var_result]
         self.code.append(f"         STA {temp_addr_result}(0:5)")
         self.temp_result = temp_addr_result
 
     def generate_lt(self, node):
-        # Generate code for left operand
         self.generate_expression(node.left)
         left_addr = self.temp_result
-        # Generate code for right operand
         self.generate_expression(node.right)
         right_addr = self.temp_result
-        # Load left operand into A
         self.code.append(f"         LDA {left_addr}(0:5)")
-        # Compare A with right operand
         self.code.append(f"         CMPA {right_addr}(0:5)")
-        # Store the result in temp_result (handled in generate_condition)
-        # No need to set temp_result here
 
     def generate_eq(self, node):
-        # Similar to generate_lt
         self.generate_expression(node.left)
         left_addr = self.temp_result
         self.generate_expression(node.right)
@@ -314,7 +274,6 @@ class CodeGenerator:
         self.code.append(f"         CMPA {right_addr}(0:5)")
 
     def generate_condition(self, node):
-        # Handle condition expressions in if and repeat statements
         if isinstance(node, BinaryOpNode):
             if node.operator in ('LESS_THAN', 'EQUALS'):
                 self.generate_binary_op(node)
@@ -333,7 +292,6 @@ class CodeGenerator:
     def new_label(self, base='L'):
         label = f"{base}{self.label_count}"
         self.label_count += 1
-        return label[:7]  # Ensure label is at most 7 characters
 
     def allocate_temp(self):
         temp_var_name = f"TEMP{self.temp_count}"

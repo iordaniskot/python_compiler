@@ -31,31 +31,51 @@ def main():
     """
 
     source_code2 = """
-    x := 2;
-    if 3<x then 
-    x:=1;
-    y:=2 
-    else 
-    y:=3
-    end
+    read x;
+    total := 3;
+    total := total + x;
+    write total
     """
 
     source_code3 = """
-    x := 2;
-if 3<x then 
-    x:= x+1;
-else 
-    x:=3
-end
-write x
+    read x;
+    y := 4;
+    
+    if x<2 then
+      write x
+    else
+      write y
+    end
     """
 
     source_code4 = """
+    i := 0;
     read x;
-    write x
+    if 2 < x then
+        y := 3;
+    else
+        y := 4
+    end
     """
 
-    source_code = source_code1
+    source_code5 = """
+    x := 2;
+    y := 4;
+    
+    total := x * y;
+    write total
+    """
+    source_code6 = """
+    i := 10;
+    if 0 < i then
+      repeat
+        write i;
+        i := i - 1
+      until i = 0
+    end
+    """
+
+    source_code = source_code6
     # Step 1: Tokenization
     try:
         tokens = tokenize(source_code)

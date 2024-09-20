@@ -24,7 +24,7 @@ class Parser:
         return statements
 
     def parse_stmt(self):
-        # Determine which type of statement to parse
+        # Determine type of statement to parse
         if self.current_token[1] == 'IF':
             return self.parse_if_stmt()
         elif self.current_token[1] == 'REPEAT':

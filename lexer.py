@@ -29,7 +29,6 @@ token_patterns = [
     (r'\s+', None),  # Ignore whitespace
 ]
 
-# Tokenizer function
 def tokenize(source_code):
     tokens = []
     while source_code:
