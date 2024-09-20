@@ -1,7 +1,63 @@
-X          EQU     100
-TERM       EQU     18
-           ORIG    3000
-START      OUT     2
-              HLT
-              END     START
-              HLT
+         ORIG 2000
+         IN 1000(19)
+         JBUS *(19)
+         LDX 1000(0:5)
+         NUM
+         STA 1(0:5)
+         ENTA 0
+         STA 2(0:5)
+         LDA 1(0:5)
+         STA 3(0:5)
+         LDA 2(0:5)
+         CMPA 3(0:5)
+         JL THEN0
+         JMP ENDIF1
+THEN0   NOP
+         ENTA 1
+         STA 5(0:5)
+         STA 4(0:5)
+REPEAT2 NOP
+         STZ 6(0:5)
+         LDA 4(0:5)
+         STA 7(0:5)
+         STA 6(0:5)
+         LDA 1(0:5)
+         STA 8(0:5)
+         MUL 6(0:5)
+         STX 6(0:5)
+         LDA 6(0:5)
+         ENTX 0
+         STA 9(0:5)
+         STA 4(0:5)
+         LDA 1(0:5)
+         STA 10(0:5)
+         STA 11(0:5)
+         ENTA 1
+         STA 12(0:5)
+         SUB 11(0:5)
+         STA 13(0:5)
+         ENTA 0
+         SUB 13(0:5)
+         STA 14(0:5)
+         STA 1(0:5)
+         LDA 1(0:5)
+         STA 15(0:5)
+         ENTA 0
+         STA 16(0:5)
+         LDA 15(0:5)
+         CMPA 16(0:5)
+         JE ENDREP3
+         JMP REPEAT2
+ENDREP3 NOP
+         LDA 4(0:5)
+         CHAR
+         STA 1987(0:5)
+         STX 1988(0:5)
+         ENTX 45
+         JAN KPO1
+         ENTX 44
+KPO1     NOP
+         STX 1986(0:5)
+         OUT 1986(2:3)
+ENDIF1  NOP
+         END 2000

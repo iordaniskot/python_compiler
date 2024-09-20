@@ -1,3 +1,4 @@
+#lexer.py
 import re
 
 token_patterns = [
@@ -17,6 +18,10 @@ token_patterns = [
     (r'\*', 'MULTIPLY'),
     (r'\/', 'DIVIDE'),
     (r'\<', 'LESS_THAN'),
+    (r'\>', 'GREATER_THAN'),
+    (r'\!', 'NOT'),
+    (r'\&', 'AND'),
+    (r'\|', 'OR'),
     (r'\=', 'EQUALS'),
     (r'\;', 'SEMICOLON'),
     (r'\(', 'LPAREN'),
